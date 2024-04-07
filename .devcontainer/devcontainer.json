@@ -1,0 +1,48 @@
+{
+  "name": "ipopt_bindgen",
+  "build": {
+    "dockerfile": "Dockerfile"
+  },
+  "capAdd": [
+    "SYS_PTRACE"
+  ],
+  "securityOpt": [
+    "seccomp=unconfined"
+  ],
+  "remoteUser": "user",
+  "containerUser": "user",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "EditorConfig.EditorConfig",
+        "mhutchie.git-graph",
+        "streetsidesoftware.code-spell-checker",
+        "mutantdino.resourcemonitor",
+        "yzhang.markdown-all-in-one",
+        "DavidAnson.vscode-markdownlint",
+        "shardulm94.trailing-spaces",
+        "rust-lang.rust-analyzer",
+        "JScearcy.rust-doc-viewer",
+        "tamasfe.even-better-toml",
+        "vadimcn.vscode-lldb",
+        "GitHub.vscode-github-actions"
+      ],
+      "settings": {
+        "cSpell.diagnosticLevel": "Hint",
+        "editor.formatOnSave": true,
+        "editor.formatOnSaveMode": "modifications",
+        "terminal.integrated.defaultProfile.linux": "bash",
+        "terminal.integrated.profiles.linux": {
+          "bash": {
+            "path": "/bin/bash"
+          }
+        },
+        "cSpell.words": [
+          "ipopt",
+          "msvc",
+          "bindgen"
+        ]
+      }
+    }
+  }
+}
