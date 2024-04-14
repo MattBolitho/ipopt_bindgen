@@ -8,7 +8,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### ✨ Added
 
-- Verified support for macOS (installed through [homebrew](https://formulae.brew.sh/formula/ipopt "Homebrew Ipopt formula link")) 🍏
+- Verified support for macOS 🍏
+
+### 🐛 Fixed
+
+- [Docs.rs](https://docs.rs/ipopt_bindgen/0.2.0/ipopt_bindgen/) build now works correctly.
 
 ## [[🏷️ v0.1.1](https://github.com/MattBolitho/ipopt_bindgen/releases/v0.1.1 "v0.1.1 GitHub Release Link")] - 06/04/2024
 

@@ -13,8 +13,8 @@
 //! It is unlikely that this will be nice to use directly.
 //! For more information, please refer to the
 //! [Ipopt C API documentation](https://coin-or.github.io/Ipopt/INTERFACES.html#INTERFACE_C).
-//! For a full usage example, please refer to the `examples` directory of the project's
-//! GitHub repository.
+//! For a full Rust usage example, please refer to the
+//! [examples in the project GitHub repository](https://github.com/MattBolitho/ipopt_bindgen/blob/main/examples/hs071.rs).
 
 #![allow(non_upper_case_globals)]
 #![allow(non_camel_case_types)]
