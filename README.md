@@ -15,7 +15,7 @@ Add this crate to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-ipopt_bindgen = "0.1"
+ipopt_bindgen = "0.2"
 ```
 
 Use the Ipopt C interface in your project:
