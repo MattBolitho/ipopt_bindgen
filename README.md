@@ -1,6 +1,8 @@
 # Ipopt Bindgen
 
 [![crates.io](https://img.shields.io/crates/v/ipopt_bindgen.svg)](https://crates.io/crates/ipopt_bindgen)
+[![docs.rs](https://docs.rs/bindgen/badge.svg)](https://docs.rs/ipopt_bindgen/)
+[![License](https://img.shields.io/crates/l/ipopt_bindgen.svg)](https://opensource.org/licenses/MIT)
 
 This crate provides raw Rust bindings to the C interface of the [Ipopt](https://github.com/coin-or/Ipopt "Ipopt GitHub repository") optimization library using [bindgen](https://github.com/rust-lang/rust-bindgen "bindgen GitHub repository").
 
