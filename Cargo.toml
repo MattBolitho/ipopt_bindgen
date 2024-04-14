@@ -2,7 +2,7 @@
 name = "ipopt_bindgen"
 description = "Rust bindings to the C interface of Ipopt, a library for large-scale, constrained, nonlinear optimization."
 authors = ["Matt Bolitho<matt.bolitho.software@gmail.com>"]
-version = "0.1.1"
+version = "0.2.0"
 edition = "2021"
 readme = "README.md"
 repository = "https://github.com/MattBolitho/ipopt_bindgen"
