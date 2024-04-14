@@ -39,6 +39,7 @@ This crate has currently been tested on:
 
 - Debian based Linux, with Ipopt installed from source.
 - Windows 11, with Ipopt installed from precompiled binaries, MSVC.
+- macOS Sonoma, with Ipopt installed from `homebrew`.
 
 ## Why another Ipopt binding?
 

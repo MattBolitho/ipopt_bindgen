@@ -48,12 +48,11 @@ fn try_add_msvc_include_directory(builder: bindgen::Builder) -> bindgen::Builder
 }
 
 fn main() {
-    // Skip building the bindings if we are on docs.rs, otherwise we will get build failures.
-    if std::env::var("DOCS_RS").is_ok() {
-        return;
+    // Only link the library if we are not building on docs.rs
+    if !std::env::var("DOCS_RS").is_ok() {
+        println!("cargo:rustc-link-lib=ipopt");
     }
 
-    println!("cargo:rustc-link-lib=ipopt");
     println!("cargo::rerun-if-changed=IpoptWrapper.h");
 
     let bindings = try_add_msvc_include_directory(bindgen::Builder::default())
