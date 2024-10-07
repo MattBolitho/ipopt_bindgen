@@ -15,7 +15,7 @@ categories = ["external-ffi-bindings", "mathematics", "science"]
 bindgen = "0.70"
 
 [target.'cfg(windows)'.build-dependencies]
-cc = "1.0"
+cc = "1.1"
 
 [[example]]
 name = "hs071"
