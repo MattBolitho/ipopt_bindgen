@@ -19,4 +19,6 @@ cc = "1.0"
 
 [[example]]
 name = "hs071"
+test = true
+harness = false
 doc-scrape-examples = false
