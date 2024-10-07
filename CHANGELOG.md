@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [🏷️ v0.2.3](https://github.com/MattBolitho/ipopt_bindgen/releases/v0.2.3 "v0.2.3 GitHub Release Link") - 07/10/2024
+
+### 🙌 Improvements
+
+- Updates devcontainer for Ubuntu 24.04 and LLVM 19.
+- Adds HS071 example to test suite.
+- Bumps outdated dependency versions.
+
 ## [🏷️ v0.2.2](https://github.com/MattBolitho/ipopt_bindgen/releases/v0.2.2 "v0.2.2 GitHub Release Link") - 14/04/2024
 
 ### 🐛 Fixed
