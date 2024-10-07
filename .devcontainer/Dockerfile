@@ -1,13 +1,10 @@
-FROM ubuntu:22.04
+FROM ubuntu:24.04
 
 RUN export DEBIAN_FRONTEND=noninteractive &&\
   apt update && \
   apt install --no-install-recommends -y \
-  gfortran \
-  build-essential \
+  gfortran-14 \
   binutils \
-  lsb-release \
-  software-properties-common \
   zip \
   unzip \
   wget \
@@ -18,7 +15,6 @@ RUN export DEBIAN_FRONTEND=noninteractive &&\
   patch \
   valgrind \
   sudo \
-  apt-utils \
   file \
   openssh-client \
   gnupg \
@@ -38,10 +34,22 @@ RUN export DEBIAN_FRONTEND=noninteractive &&\
   apt autoremove -y && apt clean && rm -rf /var/lib/apt/lists/*
 
 # Install LLVM.
-ARG LLVM_VER="18"
-RUN wget https://apt.llvm.org/llvm.sh && \
+ARG LLVM_VER="19"
+RUN apt update && \
+  apt install -y --no-install-recommends \
+  software-properties-common \
+  apt-utils \
+  build-essential \
+  lsb-release && \
+  wget https://apt.llvm.org/llvm.sh && \
   chmod +x llvm.sh && \
-  sudo ./llvm.sh ${LLVM_VER} clang-${LLVM_VER} clang++-${LLVM_VER} && \
+  ./llvm.sh ${LLVM_VER} && \
+  export DEBIAN_FRONTEND=noninteractive && \
+  apt install -y --no-install-recommends \
+  clang-${LLVM_VER} \
+  libc++-${LLVM_VER}-dev \
+  libc++abi-${LLVM_VER}-dev \
+  flang-${LLVM_VER} && \
   apt autoremove -y && apt clean && rm -rf /var/lib/apt/lists/*
 
 # Update alternatives with installed LLVM tools.
@@ -51,7 +59,7 @@ RUN update-alternatives --install /usr/bin/clang clang $(which clang-${LLVM_VER}
 # Set complier environment.
 ENV CC=clang
 ENV CXX=clang++
-ENV FC=gfortran
+ENV FC=gfortran-14
 ENV LIBRARY_PATH=/usr/local/lib
 ENV LD_LIBRARY_PATH=/usr/local/lib
 
@@ -66,17 +74,19 @@ RUN git clone https://github.com/coin-or-tools/ThirdParty-Mumps.git && \
   rm -rf ThirdParty-Mumps
 
 # Install Ipopt.
-ARG IPOPT_VER="3.14.14"
+ARG IPOPT_VER="3.14.16"
 RUN wget https://github.com/coin-or/Ipopt/archive/refs/tags/releases/${IPOPT_VER}.tar.gz && \
-  tar -xvf ${IPOPT_VER}.tar.gz && \
+  tar -xzf ${IPOPT_VER}.tar.gz && \
   cd Ipopt-releases-${IPOPT_VER} && \
   mkdir build && \
   cd build && \
-  ../configure && \
-  make -j`nproc` && \
+  ../configure \
+  CXXFLAGS="-O3 -ffast-math -stdlib=libc++ -flto=thin" \
+  --disable-sipopt && \
+  make -j$(nproc) && \
   make install && \
   cd ../.. && \
-  rm -rf Ipopt*
+  rm -rf Ipopt* ${IPOPT_VER}*
 
 # Install Rust for the container user.
 ARG USERNAME=user
@@ -85,13 +95,20 @@ ARG USER_GID=$USER_UID
 
 # Create the user.
 # https://code.visualstudio.com/remote/advancedcontainers/add-nonroot-user
-RUN groupadd --gid $USER_GID $USERNAME && \
-  useradd --uid $USER_UID --gid $USER_GID -m $USERNAME && \
-  echo $USERNAME ALL=\(root\) NOPASSWD:ALL > /etc/sudoers.d/$USERNAME && \
-  usermod -aG root $USERNAME && \
-  chmod 0440 /etc/sudoers.d/$USERNAME
+ARG USERNAME=user
+ARG USER_UID=1234
+ARG USER_GID=$USER_UID
+RUN groupadd --gid ${USER_GID} ${USERNAME} && \
+  apt update && \
+  apt install -y sudo && \
+  useradd --uid ${USER_UID} --gid ${USER_GID} --create-home --home-dir /home/${USERNAME} --shell /bin/bash ${USERNAME} && \
+  echo ${USERNAME} ALL=\(root\) NOPASSWD:ALL > /etc/sudoers.d/${USERNAME} && \
+  chmod 0440 /etc/sudoers.d/${USERNAME}
 
 USER ${USERNAME}
-RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
-ENV PATH="/home/${USERNAME}/.cargo/bin:${PATH}"
-RUN rustup default stable
+ENV HOME=/home/${USERNAME}
+WORKDIR ${HOME}
+
+RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y && \
+  . "$HOME/.cargo/env" && \
+  rustup component add rustfmt
