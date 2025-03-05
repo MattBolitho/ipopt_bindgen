@@ -15,7 +15,7 @@ Add this crate to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-ipopt_bindgen = "0.2"
+ipopt_bindgen = "0.3"
 ```
 
 Use the Ipopt C interface in your project:
@@ -107,13 +107,11 @@ LLVM also provide an [`apt` install script](https://apt.llvm.org/ "LLVM apt scri
 
 All meaningful changes to this project are documented in the [CHANGELOG](CHANGELOG.md "Changelog link").
 
+The project is versioned using [0ver](https://0ver.org/).
+
 ## License
 
-This repository is licensed under either of:
-
-- Apache License, Version 2.0 ([LICENSE-APACHE](./LICENSE-APACHE) or [http://www.apache.org/licenses/LICENSE-2.0](http://www.apache.org/licenses/LICENSE-2.0))
-- MIT License ([LICENSE-MIT](./LICENSE-MIT) or [https://opensource.org/licenses/MIT](https://opensource.org/licenses/MIT))
-
-at your option.
+This repository is licensed under the Apache-2.0 with LLVM exception.
+Please refer to the [`LICENSE` file](./LICENSE "License file link") for more information.
 
 Ipopt itself is licensed under the Eclipse Public License (EPL) version 2.0.

@@ -2,7 +2,15 @@
 
 All notable changes to this project will be documented in this file.
 
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and this project conforms to [0ver](https://0ver.org/).
+
+## [🏷️ v0.3.0](https://github.com/MattBolitho/ipopt_bindgen/releases/v0.3.0 "v0.3.0 GitHub Release Link") - Unreleased
+
+### Project
+
+- License changed from either [MIT](https://spdx.org/licenses/MIT.html "MIT license text") or [Apache-2.0](https://spdx.org/licenses/Apache-2.0.html "Apache 2.0 license text") (at your option) to [Apache-2.0](https://spdx.org/licenses/Apache-2.0.html "Apache 2.0 license text") with [LLVM Exception](https://spdx.org/licenses/LLVM-exception.html "LLVM exception license text").
+- Versioning strategy is now explicitly [0ver](https://0ver.org/).
+- Uses Rust edition 2024.
 
 ## [🏷️ v0.2.3](https://github.com/MattBolitho/ipopt_bindgen/releases/v0.2.3 "v0.2.3 GitHub Release Link") - 07/10/2024
 

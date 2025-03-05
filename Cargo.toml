@@ -1,21 +1,21 @@
 [package]
 name = "ipopt_bindgen"
-description = "Rust bindings to the C interface of Ipopt, a library for large-scale, constrained, nonlinear optimization."
+description = "Rust bindings to the C interface of Ipopt - a library for large-scale, constrained, nonlinear optimization."
 authors = ["Matt Bolitho<matt.bolitho.software@gmail.com>"]
-version = "0.2.3"
-edition = "2021"
+version = "0.3.0"
+edition = "2024"
 readme = "README.md"
 repository = "https://github.com/MattBolitho/ipopt_bindgen"
 documentation = "https://docs.rs/ipopt_bindgen"
-license = "MIT OR Apache-2.0"
+license = "Apache-2.0 with LLVM-exception"
 keywords = ["ipopt", "optimization", "ffi", "bindings"]
 categories = ["external-ffi-bindings", "mathematics", "science"]
 
 [build-dependencies]
-bindgen = "0.70"
+bindgen = "0.71"
 
 [target.'cfg(windows)'.build-dependencies]
-cc = "1.1"
+cc = "1.2"
 
 [[example]]
 name = "hs071"
