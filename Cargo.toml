@@ -18,7 +18,7 @@ bindgen = "0.71"
 cc = "1.2"
 
 [[example]]
-name = "hs071"
+name = "hs071_c_interface"
 test = true
 harness = false
 doc-scrape-examples = false
