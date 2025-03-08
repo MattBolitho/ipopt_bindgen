@@ -1,9 +1,7 @@
-//! HS071 example as per the
-//! [Ipopt documentation](https://coin-or.github.io/Ipopt/INTERFACES.html).
+//! HS071 example per the [Ipopt documentation](https://coin-or.github.io/Ipopt/INTERFACES.html).
 //!
-//! > ⚠️ This library should probably be used to implement your own convenient
-//! > Rust interfaces to Ipopt. This example is just to show how that it *is*
-//! > possible to use the raw C API.
+//! This example shows how it is possible to directly use the C API bindings. It is recommended to
+//! ise the `Tnlp` trait and `Application` struct for a more idiomatic Rust interface.
 
 use ipopt_bindgen::*;
 

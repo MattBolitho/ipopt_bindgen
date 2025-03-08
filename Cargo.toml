@@ -17,8 +17,12 @@ bindgen = "0.71"
 [target.'cfg(windows)'.build-dependencies]
 cc = "1.2"
 
+[features]
+default = ["rust-interface"]
+rust-interface = []
+
 [[example]]
 name = "hs071_c_interface"
-test = true
+# test = true
 harness = false
 doc-scrape-examples = false

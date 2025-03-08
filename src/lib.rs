@@ -8,17 +8,15 @@
 //! This crate does **not** build Ipopt itself.
 //! The `build.rs` script will generate the bindings based on the system's installed
 //! version of Ipopt.
-//!
-//! This crate only provides access to the raw C bindings of Ipopt.
-//! It is unlikely that this will be nice to use directly.
-//! For more information, please refer to the
-//! [Ipopt C API documentation](https://coin-or.github.io/Ipopt/INTERFACES.html#INTERFACE_C).
-//! For a full Rust usage example, please refer to the
-//! [examples in the project GitHub repository](https://github.com/MattBolitho/ipopt_bindgen/blob/main/examples/hs071.rs).
 
-#![allow(non_upper_case_globals)]
-#![allow(non_camel_case_types)]
-#![allow(non_snake_case)]
+pub mod c_interface;
+#[cfg(feature = "rust-interface")]
+pub mod tnlp;
+#[cfg(feature = "rust-interface")]
+pub mod application;
 
-#[cfg(not(doc))]
-include!(concat!(env!("OUT_DIR"), "/bindings.rs"));
+pub use c_interface::*;
+#[cfg(feature = "rust-interface")]
+pub use tnlp::*;
+#[cfg(feature = "rust-interface")]
+pub use application::*;

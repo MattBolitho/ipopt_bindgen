@@ -74,14 +74,14 @@ RUN git clone https://github.com/coin-or-tools/ThirdParty-Mumps.git && \
   rm -rf ThirdParty-Mumps
 
 # Install Ipopt.
-ARG IPOPT_VER="3.14.16"
+ARG IPOPT_VER="3.14.17"
 RUN wget https://github.com/coin-or/Ipopt/archive/refs/tags/releases/${IPOPT_VER}.tar.gz && \
   tar -xzf ${IPOPT_VER}.tar.gz && \
   cd Ipopt-releases-${IPOPT_VER} && \
   mkdir build && \
   cd build && \
   ../configure \
-  CXXFLAGS="-O3 -ffast-math -stdlib=libc++ -flto=thin" \
+  CXXFLAGS="-O3 -stdlib=libc++ -flto=thin" \
   --disable-sipopt && \
   make -j$(nproc) && \
   make install && \
