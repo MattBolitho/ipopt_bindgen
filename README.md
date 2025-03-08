@@ -1,9 +1,9 @@
 # Ipopt Bindgen
 
-[![crates.io](https://img.shields.io/crates/v/ipopt_bindgen.svg)](https://crates.io/crates/ipopt_bindgen)
-[![docs.rs](https://docs.rs/bindgen/badge.svg)](https://docs.rs/ipopt_bindgen/)
-[![dependency status](https://deps.rs/repo/github/MattBolitho/ipopt_bindgen/status.svg)](https://deps.rs/repo/github/MattBolitho/ipopt_bindgen)
-[![License](https://img.shields.io/crates/l/ipopt_bindgen.svg)](https://opensource.org/licenses/MIT)
+[![crates.io](https://img.shields.io/crates/v/ipopt_bindgen.svg)](https://crates.io/crates/ipopt_bindgen "ipopt_bindgen crates.io link")
+[![docs.rs](https://docs.rs/bindgen/badge.svg)](https://docs.rs/ipopt_bindgen/ "ipopt_bindgen docs.rs link")
+[![dependency status](https://deps.rs/repo/github/MattBolitho/ipopt_bindgen/status.svg)](https://deps.rs/repo/github/MattBolitho/ipopt_bindgen "ipopt_bindgen deps.rs link")
+[![License](https://img.shields.io/crates/l/ipopt_bindgen.svg)](https://spdx.org/licenses/Apache-2.0.html "Apache 2.0 license link")
 
 This crate provides raw Rust bindings to the C interface of the [Ipopt](https://github.com/coin-or/Ipopt "Ipopt GitHub repository") optimization library using [bindgen](https://github.com/rust-lang/rust-bindgen "bindgen GitHub repository").
 
@@ -27,30 +27,22 @@ use ipopt_bindgen::*;
 println!("{0}.{1}.{2}", IPOPT_VERSION_MAJOR, IPOPT_VERSION_MINOR, IPOPT_VERSION_RELEASE);
 ```
 
-Or, run the example in this repository:
+Or, run the examples in this repository:
 
 ```sh
-cargo run --example hs071
+cargo run --example hs071-c-interface
 ```
-
-## Support
-
-This crate has currently been tested on:
-
-- Debian based Linux, with Ipopt installed from source.
-- Windows 11, with Ipopt installed from precompiled binaries, MSVC.
-- macOS Sonoma, with Ipopt installed from `homebrew`.
 
 ## Why another Ipopt binding?
 
 Rust already has other crates that provide bindings to Ipopt:
 
-- [ipopt-rs](https://crates.io/crates/ipopt) (with [ipopt-sys](https://crates.io/crates/ipopt-sys))
-- [ipopt-src](https://github.com/Maroon502/ipopt-src)
+- [ipopt-rs](https://crates.io/crates/ipopt "ipopt-rs crates.io link") (with [ipopt-sys](https://crates.io/crates/ipopt-sys "ipopt-sys crates.io link"))
+- [ipopt-src](https://github.com/Maroon502/ipopt-src "ipopt-src crates.io link")
 
 So why create another one?
 
-The purpose of this crate is to use the system Ipopt installation directly, rather than build it from within cargo.
+The purpose of this crate is to use the system Ipopt installation directly, rather than build it from within `cargo`.
 This has both advantages and disadvantages, and might not be right for you.
 
 Pros:
@@ -64,21 +56,17 @@ Cons:
 - ❌ Requires a system installation of Ipopt, which may be inconvenient for your project.
 - ❌ Uses the C interface, rather than the more feature-ful C++ one.
 
-If you just want to get started with Ipopt in Rust, you should probably use one of the aforementioned existing crates.
-However, if you already have Ipopt installed on your system or need to use a build with specific features, this crate might be for you.
-
-Ideally, an idiomatic Rust crate would be build on top of this one, or it could be integrated into an existing crate.
-
 There is a [full, mirrored example of the HS071 problem](examples/hs071.rs "HS071 problem link") from the Ipopt documentation in the examples directory.
-Again, the ideal usage of this crate is to be consumed by a higher-level crate that provides a more idiomatic interface, but it is possible to use it directly.
-The example demonstrates the C API usage, which will probably aid in that endeavour!
 
 ## Prerequisites
 
 ### Ipopt
 
 Ipopt must be installed on your system.
-The binding header file will attempt to include `coin-or/IpStdCInterface.h`.
+The binding header file will attempt to include the Ipopt C interface header.
+By default, this will attempt to `#include <coin-or/IpStdCInterface.h>` (the typical include structure for source builds of Ipopt).
+This behaviour can be controlled by the `IPOPT_BINDGEN_INCLUDE_PREFIX` environment variable, which will change this include statement to match the pattern `#include <${IPOPT_BINDGEN_INCLUDE_PREFIX}IpStdCInterface.h>`.
+If the value of this environment variable does not end with a `/`, then it will be automatically added for you.
 
 On Linux, you can either install Ipopt using your package manager or [build it from source](https://coin-or.github.io/Ipopt/INSTALL.html "Ipopt build documentation").
 By default, these processes should make Ipopt immediately available for use with this crate.
@@ -99,19 +87,15 @@ If this fails, you will need to set the `INCLUDE` environment variable to includ
 The [bindgen requirements](https://rust-lang.github.io/rust-bindgen/requirements.html "bindgen requirements documentation") must also be available on your system.
 This basically amounts to having `clang` installed.
 
-On Windows, you can use `winget install LLVM.LLVM`.
-On Linux, you can use your package manager to install `clang`.
-LLVM also provide an [`apt` install script](https://apt.llvm.org/ "LLVM apt script site link").
-
 ## Changes
 
 All meaningful changes to this project are documented in the [CHANGELOG](CHANGELOG.md "Changelog link").
 
-The project is versioned using [0ver](https://0ver.org/).
+The project is versioned using [0ver](https://0ver.org/ "0ver specification link").
 
 ## License
 
 This repository is licensed under the Apache-2.0 with LLVM exception.
 Please refer to the [`LICENSE` file](./LICENSE "License file link") for more information.
 
-Ipopt itself is licensed under the Eclipse Public License (EPL) version 2.0.
+Ipopt itself is licensed under the [Eclipse Public License (EPL) version 2.0](https://spdx.org/licenses/EPL-2.0.html "Eclipse Public License Version 2.0 link").

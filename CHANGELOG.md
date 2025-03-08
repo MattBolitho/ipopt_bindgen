@@ -10,7 +10,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) 
 
 - License changed from either [MIT](https://spdx.org/licenses/MIT.html "MIT license text") or [Apache-2.0](https://spdx.org/licenses/Apache-2.0.html "Apache 2.0 license text") (at your option) to [Apache-2.0](https://spdx.org/licenses/Apache-2.0.html "Apache 2.0 license text") with [LLVM Exception](https://spdx.org/licenses/LLVM-exception.html "LLVM exception license text").
 - Versioning strategy is now explicitly [0ver](https://0ver.org/).
+
+### Improvements
+
 - Uses Rust edition 2024.
+- Automatically generates the header that includes `IpStdCInterface.h` in the build output directory.
+- Adds `IPOPT_BINDGEN_INCLUDE_PREFIX` environment variable to control the prefix of the `#include <IpStdCInterface.h>` statement.
 
 ## [🏷️ v0.2.3](https://github.com/MattBolitho/ipopt_bindgen/releases/v0.2.3 "v0.2.3 GitHub Release Link") - 07/10/2024
 
