@@ -11,6 +11,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) 
 - License changed from either [MIT](https://spdx.org/licenses/MIT.html "MIT license text") or [Apache-2.0](https://spdx.org/licenses/Apache-2.0.html "Apache 2.0 license text") (at your option) to [Apache-2.0](https://spdx.org/licenses/Apache-2.0.html "Apache 2.0 license text") with [LLVM Exception](https://spdx.org/licenses/LLVM-exception.html "LLVM exception license text").
 - Versioning strategy is now explicitly [0ver](https://0ver.org/).
 
+### Added
+
+- Idiomatic Rust API over the Ipopt C interface.
+  - Enabled by the default crate feature `rust-interface`.
+  - Provides similar semantics to the C++ interface via the `Tnlp` trait and `Application` struct.
+
 ### Improvements
 
 - Uses Rust edition 2024.

@@ -40,7 +40,8 @@
         "cSpell.words": [
           "ipopt",
           "msvc",
-          "bindgen"
+          "bindgen",
+          "mdbook"
         ]
       }
     }

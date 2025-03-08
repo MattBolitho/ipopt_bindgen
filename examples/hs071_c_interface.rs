@@ -1,25 +1,25 @@
-//! HS071 example as per the
-//! [Ipopt documentation](https://coin-or.github.io/Ipopt/INTERFACES.html).
+//! HS071 example per the [Ipopt documentation](https://coin-or.github.io/Ipopt/INTERFACES.html).
 //!
-//! > ⚠️ This library should probably be used to implement your own convenient
-//! > Rust interfaces to Ipopt. This example is just to show how that it *is*
-//! > possible to use the raw C API.
+//! This example shows how it is possible to directly use the C API bindings. It is recommended to
+//! ise the `Tnlp` trait and `Application` struct for a more idiomatic Rust interface.
 
-use ipopt_bindgen::*;
+use ipopt_bindgen::c_interface::*;
 
-unsafe extern "C" fn objective_callback(
+extern "C" fn objective_callback(
     n: ipindex,
     x: *mut ipnumber,
     _new_x: bool,
     obj_value: *mut ipnumber,
     _user_data: UserDataPtr,
 ) -> bool {
-    let x_slice = std::slice::from_raw_parts(x, n as usize);
-    *obj_value = x_slice[0] * x_slice[3] * (x_slice[0] + x_slice[1] + x_slice[2]) + x_slice[2];
+    let x_slice = unsafe { std::slice::from_raw_parts(x, n as usize) };
+    unsafe {
+        *obj_value = x_slice[0] * x_slice[3] * (x_slice[0] + x_slice[1] + x_slice[2]) + x_slice[2];
+    }
     true
 }
 
-unsafe extern "C" fn constraints_callback(
+extern "C" fn constraints_callback(
     n: ipindex,
     x: *mut ipnumber,
     _new_x: bool,
@@ -27,8 +27,8 @@ unsafe extern "C" fn constraints_callback(
     g: *mut ipnumber,
     _user_data: UserDataPtr,
 ) -> bool {
-    let x_slice = std::slice::from_raw_parts(x, n as usize);
-    let g_slice = std::slice::from_raw_parts_mut(g, m as usize);
+    let x_slice = unsafe { std::slice::from_raw_parts(x, n as usize) };
+    let g_slice = unsafe { std::slice::from_raw_parts_mut(g, m as usize) };
     g_slice[0] = x_slice[0] * x_slice[1] * x_slice[2] * x_slice[3];
     g_slice[1] = x_slice[0] * x_slice[0]
         + x_slice[1] * x_slice[1]
@@ -37,15 +37,15 @@ unsafe extern "C" fn constraints_callback(
     true
 }
 
-unsafe extern "C" fn gradient_callback(
+extern "C" fn gradient_callback(
     n: ipindex,
     x: *mut ipnumber,
     _new_x: bool,
     grad_f: *mut ipnumber,
     _user_data: UserDataPtr,
 ) -> bool {
-    let x_slice = std::slice::from_raw_parts(x, n as usize);
-    let grad_slice = std::slice::from_raw_parts_mut(grad_f, n as usize);
+    let x_slice = unsafe { std::slice::from_raw_parts(x, n as usize) };
+    let grad_slice = unsafe { std::slice::from_raw_parts_mut(grad_f, n as usize) };
     grad_slice[0] = x_slice[0] * x_slice[3] + x_slice[3] * (x_slice[0] + x_slice[1] + x_slice[2]);
     grad_slice[1] = x_slice[0] * x_slice[3];
     grad_slice[2] = x_slice[0] * x_slice[3] + 1.0;
@@ -53,7 +53,7 @@ unsafe extern "C" fn gradient_callback(
     true
 }
 
-unsafe extern "C" fn jacobian_callback(
+extern "C" fn jacobian_callback(
     n: ipindex,
     x: *mut ipnumber,
     _new_x: bool,
@@ -66,8 +66,8 @@ unsafe extern "C" fn jacobian_callback(
 ) -> bool {
     if x.is_null() {
         // Set Jacobian sparsity structure
-        let i_row = std::slice::from_raw_parts_mut(i_row, nele_jac as usize);
-        let j_col = std::slice::from_raw_parts_mut(j_col, nele_jac as usize);
+        let i_row = unsafe { std::slice::from_raw_parts_mut(i_row, nele_jac as usize) };
+        let j_col = unsafe { std::slice::from_raw_parts_mut(j_col, nele_jac as usize) };
         // this particular Jacobian is dense
         i_row[0] = 0;
         j_col[0] = 0;
@@ -87,8 +87,8 @@ unsafe extern "C" fn jacobian_callback(
         j_col[7] = 3;
     } else {
         // Set Jacobian values
-        let x_slice = std::slice::from_raw_parts(x, n as usize);
-        let values = std::slice::from_raw_parts_mut(values, nele_jac as usize);
+        let x_slice = unsafe { std::slice::from_raw_parts(x, n as usize) };
+        let values = unsafe { std::slice::from_raw_parts_mut(values, nele_jac as usize) };
         values[0] = x_slice[1] * x_slice[2] * x_slice[3]; // 0,0
         values[1] = x_slice[0] * x_slice[2] * x_slice[3]; // 0,1
         values[2] = x_slice[0] * x_slice[1] * x_slice[3]; // 0,2
@@ -102,7 +102,7 @@ unsafe extern "C" fn jacobian_callback(
     true
 }
 
-unsafe extern "C" fn hessian_callback(
+extern "C" fn hessian_callback(
     n: ipindex,
     x: *mut ipnumber,
     _new_x: bool,
@@ -118,8 +118,8 @@ unsafe extern "C" fn hessian_callback(
 ) -> bool {
     if x.is_null() {
         // Set the Hessian sparsity structure
-        let i_row_slice = std::slice::from_raw_parts_mut(i_row, nele_hess as usize);
-        let j_col_slice = std::slice::from_raw_parts_mut(j_col, nele_hess as usize);
+        let i_row_slice = unsafe { std::slice::from_raw_parts_mut(i_row, nele_hess as usize) };
+        let j_col_slice = unsafe { std::slice::from_raw_parts_mut(j_col, nele_hess as usize) };
         let mut idx: ipindex = 0;
         for row in 0..n {
             for col in 0..=row {
@@ -130,9 +130,9 @@ unsafe extern "C" fn hessian_callback(
         }
     } else {
         // Set the Hessian values
-        let x_slice = std::slice::from_raw_parts(x, n as usize);
-        let lambda_slice = std::slice::from_raw_parts(lambda, m as usize);
-        let hessian = std::slice::from_raw_parts_mut(values, nele_hess as usize);
+        let x_slice = unsafe { std::slice::from_raw_parts(x, n as usize) };
+        let lambda_slice = unsafe { std::slice::from_raw_parts(lambda, m as usize) };
+        let hessian = unsafe { std::slice::from_raw_parts_mut(values, nele_hess as usize) };
 
         // return the values. This is a symmetric matrix, fill the lower left
         // triangle only
@@ -190,7 +190,7 @@ fn main() {
     let cstr = |s: &str| std::ffi::CString::new(s).unwrap().into_raw();
 
     unsafe {
-        let problem = crate::CreateIpoptProblem(
+        let problem = CreateIpoptProblem(
             n,
             x_l.as_mut_ptr(),
             x_u.as_mut_ptr(),
