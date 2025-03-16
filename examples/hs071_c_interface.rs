@@ -4,7 +4,6 @@
 //! ise the `Tnlp` trait and `Application` struct for a more idiomatic Rust interface.
 
 #[allow(clippy::wildcard_imports)]
-
 use ipopt_bindgen::c_interface::*;
 
 extern "C" fn objective_callback(

@@ -4,9 +4,12 @@
 //! interface - supporting functionality like configuring the optimizer and optimizing problems.
 
 #[allow(clippy::wildcard_imports)]
-
-use crate::{c_interface::*, results::OptimizationResult, tnlp::{Tnlp, UserScaling}};
-use std::{collections::HashMap, error::Error, ffi::CString, ptr, os::raw::c_void, slice};
+use crate::{
+    c_interface::*,
+    results::OptimizationResult,
+    tnlp::{IntermediateData, Tnlp, UserScaling},
+};
+use std::{collections::HashMap, error::Error, ffi::CString, os::raw::c_void, ptr, slice};
 
 /// The main application type for making calls to Ipopt.
 #[derive(Debug, Default, Clone, PartialEq)]
@@ -296,6 +299,39 @@ impl Application {
         }
     }
 
+    extern "C" fn intermediate_callback<P: Tnlp>(
+        alg_mod: ipindex,
+        iter_count: ipindex,
+        obj_value: ipnumber,
+        inf_pr: ipnumber,
+        inf_du: ipnumber,
+        mu: ipnumber,
+        d_norm: ipnumber,
+        regularization_size: ipnumber,
+        alpha_du: ipnumber,
+        alpha_pr: ipnumber,
+        ls_trials: ipindex,
+        user_data_ptr: UserDataPtr,
+    ) -> bool {
+        debug_assert!(!user_data_ptr.is_null());
+        let user_data: &mut IpoptBindgenUserData<'_, P> =
+            IpoptBindgenUserData::reify_from_void_ptr(user_data_ptr);
+
+        user_data.problem.intermediate(IntermediateData {
+            alg_mod,
+            iter_count,
+            obj_value,
+            inf_pr,
+            inf_du,
+            mu,
+            d_norm,
+            regularization_size,
+            alpha_du,
+            alpha_pr,
+            ls_trials,
+        })
+    }
+
     /// Optimizes the problem.
     ///
     /// # Parameters
@@ -356,6 +392,10 @@ impl Application {
                 Some(Self::hessian_callback::<P>),
             )
         };
+
+        unsafe {
+            SetIntermediateCallback(ipopt_problem, Some(Self::intermediate_callback::<P>));
+        }
 
         // Add the options to the C problem. Todo - see if we can avoid copying the strings.
         for (option, value) in &self.int_options {

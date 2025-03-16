@@ -84,6 +84,22 @@ impl InitialSolution {
     }
 }
 
+/// Ipopt intermediate callback data packed into a struct.
+#[derive(Debug, Default, Clone, PartialEq)]
+pub struct IntermediateData {
+    pub alg_mod: i32,
+    pub iter_count: i32,
+    pub obj_value: f64,
+    pub inf_pr: f64,
+    pub inf_du: f64,
+    pub mu: f64,
+    pub d_norm: f64,
+    pub regularization_size: f64,
+    pub alpha_du: f64,
+    pub alpha_pr: f64,
+    pub ls_trials: i32,
+}
+
 /// A trait for NLPs that use standard triplet matrix form and dense vectors.
 pub trait Tnlp {
     /// Gets the dimensions of the problem.
@@ -200,6 +216,16 @@ pub trait Tnlp {
         m: i32,
         values: &mut [f64],
     ) -> bool;
+
+    /// User code that runs at each iteration.
+    ///
+    /// # Parameters
+    /// - `data` - The intermediate data at the current iteration.
+    ///
+    /// Return `false` to terminate the optimization.
+    fn intermediate(&mut self, _data: IntermediateData) -> bool {
+        true
+    }
 }
 
 #[cfg(test)]
