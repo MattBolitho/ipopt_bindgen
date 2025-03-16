@@ -3,8 +3,10 @@
 //! This module defines an idiomatic Rust emulation of the `Ipopt::Application` C++ type via the C
 //! interface - supporting functionality like configuring the optimizer and optimizing problems.
 
+#[allow(clippy::wildcard_imports)]
+
 use crate::{c_interface::*, results::OptimizationResult, tnlp::Tnlp};
-use std::{collections::HashMap, error::Error, ffi::CString, os::raw::c_void};
+use std::{collections::HashMap, error::Error, ffi::CString, os::raw::c_void, slice};
 
 /// The main application type for making calls to Ipopt.
 #[derive(Debug, Default, Clone, PartialEq)]
@@ -18,7 +20,7 @@ pub struct Application {
 #[derive(Debug)]
 struct IpoptBindgenUserData<'a, P: Tnlp> {
     pub problem: &'a mut P,
-    pub results: &'a mut OptimizationResult
+    pub results: &'a mut OptimizationResult,
 }
 
 impl<'a, P: Tnlp> IpoptBindgenUserData<'a, P> {
@@ -131,10 +133,22 @@ impl Application {
         obj_value: *mut ipnumber,
         user_data_ptr: UserDataPtr,
     ) -> bool {
-        let user_data: &mut IpoptBindgenUserData<'_, P> = IpoptBindgenUserData::reify_from_void_ptr(user_data_ptr);
-        let x_slice = unsafe { std::slice::from_raw_parts(x, n as usize) };
-        user_data.results.performance.number_of_objective_evaluations += 1;
-        user_data.problem.eval_f(x_slice, unsafe { &mut *obj_value })
+        let n_var = usize::try_from(n).unwrap();
+
+        debug_assert!(!x.is_null());
+        let x_slice = unsafe { slice::from_raw_parts(x, n_var) };
+
+        debug_assert!(!user_data_ptr.is_null());
+        let user_data: &mut IpoptBindgenUserData<'_, P> =
+            IpoptBindgenUserData::reify_from_void_ptr(user_data_ptr);
+
+        user_data
+            .results
+            .performance
+            .number_of_objective_evaluations += 1;
+        user_data
+            .problem
+            .eval_f(x_slice, unsafe { &mut *obj_value })
     }
 
     extern "C" fn gradient_callback<P: Tnlp>(
@@ -144,10 +158,22 @@ impl Application {
         grad_f: *mut ipnumber,
         user_data_ptr: UserDataPtr,
     ) -> bool {
-        let user_data: &mut IpoptBindgenUserData<'_, P> = IpoptBindgenUserData::reify_from_void_ptr(user_data_ptr);
-        let x_slice = unsafe { std::slice::from_raw_parts(x, n as usize) };
-        let grad_slice = unsafe { std::slice::from_raw_parts_mut(grad_f, n as usize) };
-        user_data.results.performance.number_of_objective_gradient_evaluations += 1;
+        let n_var = usize::try_from(n).unwrap();
+
+        debug_assert!(!x.is_null());
+        let x_slice = unsafe { slice::from_raw_parts(x, n_var) };
+
+        debug_assert!(!grad_f.is_null());
+        let grad_slice = unsafe { slice::from_raw_parts_mut(grad_f, n_var) };
+
+        debug_assert!(!user_data_ptr.is_null());
+        let user_data: &mut IpoptBindgenUserData<'_, P> =
+            IpoptBindgenUserData::reify_from_void_ptr(user_data_ptr);
+
+        user_data
+            .results
+            .performance
+            .number_of_objective_gradient_evaluations += 1;
         user_data.problem.eval_grad_f(x_slice, grad_slice)
     }
 
@@ -159,10 +185,23 @@ impl Application {
         g: *mut ipnumber,
         user_data_ptr: UserDataPtr,
     ) -> bool {
-        let user_data: &mut IpoptBindgenUserData<'_, P> = IpoptBindgenUserData::reify_from_void_ptr(user_data_ptr);
-        let x_slice = unsafe { std::slice::from_raw_parts(x, n as usize) };
-        let g_slice = unsafe { std::slice::from_raw_parts_mut(g, m as usize) };
-        user_data.results.performance.number_of_constraint_evaluations += 1;
+        let n_var = usize::try_from(n).unwrap();
+        let n_cons = usize::try_from(m).unwrap();
+
+        debug_assert!(!x.is_null());
+        let x_slice = unsafe { slice::from_raw_parts(x, n_var) };
+
+        debug_assert!(!g.is_null());
+        let g_slice = unsafe { slice::from_raw_parts_mut(g, n_cons) };
+
+        debug_assert!(!user_data_ptr.is_null());
+        let user_data: &mut IpoptBindgenUserData<'_, P> =
+            IpoptBindgenUserData::reify_from_void_ptr(user_data_ptr);
+
+        user_data
+            .results
+            .performance
+            .number_of_constraint_evaluations += 1;
         user_data.problem.eval_g(x_slice, g_slice)
     }
 
@@ -177,15 +216,31 @@ impl Application {
         values: *mut ipnumber,
         user_data_ptr: UserDataPtr,
     ) -> bool {
-        let user_data: &mut IpoptBindgenUserData<'_, P> = IpoptBindgenUserData::reify_from_void_ptr(user_data_ptr);
+        let n_var = usize::try_from(n).unwrap();
+        let nnz = usize::try_from(nele_jac).unwrap();
+
+        debug_assert!(!user_data_ptr.is_null());
+        let user_data: &mut IpoptBindgenUserData<'_, P> =
+            IpoptBindgenUserData::reify_from_void_ptr(user_data_ptr);
+
         if x.is_null() {
-            let row_slice = unsafe { std::slice::from_raw_parts_mut(i_row, nele_jac as usize) };
-            let col_slice = unsafe { std::slice::from_raw_parts_mut(j_col, nele_jac as usize) };
-            user_data.problem.get_jacobian_sparsity(n, m, row_slice, col_slice);
+            debug_assert!(!i_row.is_null());
+            let row_slice = unsafe { slice::from_raw_parts_mut(i_row, nnz) };
+
+            debug_assert!(!j_col.is_null());
+            let col_slice = unsafe { slice::from_raw_parts_mut(j_col, nnz) };
+
+            user_data
+                .problem
+                .get_jacobian_sparsity(n, m, row_slice, col_slice);
             true
         } else {
-            let x_slice = unsafe { std::slice::from_raw_parts(x, n as usize) };
-            let jac_slice = unsafe { std::slice::from_raw_parts_mut(values, nele_jac as usize) };
+            debug_assert!(!x.is_null());
+            let x_slice = unsafe { slice::from_raw_parts(x, n_var) };
+
+            debug_assert!(!values.is_null());
+            let jac_slice = unsafe { slice::from_raw_parts_mut(values, nnz) };
+
             user_data.results.performance.number_of_jacobian_evaluations += 1;
             user_data.problem.eval_jac_g(x_slice, m, jac_slice)
         }
@@ -205,24 +260,56 @@ impl Application {
         values: *mut ipnumber,
         user_data_ptr: UserDataPtr,
     ) -> bool {
-        let user_data: &mut IpoptBindgenUserData<'_, P> = IpoptBindgenUserData::reify_from_void_ptr(user_data_ptr);
+        let n_var = usize::try_from(n).unwrap();
+        let n_cons = usize::try_from(m).unwrap();
+        let nnz = usize::try_from(nele_hess).unwrap();
+
+        debug_assert!(!user_data_ptr.is_null());
+        let user_data: &mut IpoptBindgenUserData<'_, P> =
+            IpoptBindgenUserData::reify_from_void_ptr(user_data_ptr);
+
         if x.is_null() {
-            // Set the Hessian sparsity structure
-            let row_slice = unsafe { std::slice::from_raw_parts_mut(i_row, nele_hess as usize) };
-            let col_slice = unsafe { std::slice::from_raw_parts_mut(j_col, nele_hess as usize) };
-            user_data.problem.get_hessian_sparsity(n, m, row_slice, col_slice);
+            debug_assert!(!i_row.is_null());
+            let row_slice = unsafe { slice::from_raw_parts_mut(i_row, nnz) };
+
+            debug_assert!(!j_col.is_null());
+            let col_slice = unsafe { slice::from_raw_parts_mut(j_col, nnz) };
+
+            user_data
+                .problem
+                .get_hessian_sparsity(n, m, row_slice, col_slice);
             true
         } else {
-            // Set the Hessian values
-            let x_slice = unsafe { std::slice::from_raw_parts(x, n as usize) };
-            let lambda_slice = unsafe { std::slice::from_raw_parts(lambda, m as usize) };
-            let hessian = unsafe { std::slice::from_raw_parts_mut(values, nele_hess as usize) };
+            debug_assert!(!x.is_null());
+            let x_slice = unsafe { slice::from_raw_parts(x, n_var) };
+
+            debug_assert!(!lambda.is_null());
+            let lambda_slice = unsafe { slice::from_raw_parts(lambda, n_cons) };
+
+            debug_assert!(!values.is_null());
+            let hessian = unsafe { slice::from_raw_parts_mut(values, nnz) };
+
             user_data.results.performance.number_of_hessian_evaluations += 1;
-            user_data.problem.eval_h(x_slice, obj_factor, lambda_slice, m, hessian)
+            user_data
+                .problem
+                .eval_h(x_slice, obj_factor, lambda_slice, m, hessian)
         }
     }
 
-    /// Optimizes the given problem.
+    /// Optimizes the problem.
+    ///
+    /// # Parameters
+    ///
+    /// - `problem` - The problem to optimize.
+    ///
+    /// # Errors
+    ///
+    /// - The problem dimensions are not representable as a usize.
+    /// - A C compatible string cannot be created for an option.
+    ///
+    /// # Returns
+    ///
+    /// A result containing the optimization results.
     pub fn optimize_tnlp<P: Tnlp>(
         &self,
         mut problem: P,
@@ -230,8 +317,10 @@ impl Application {
         const C_STYLE_INDEXING: i32 = 0;
 
         let problem_size = problem.get_nlp_info();
-        let n = problem_size.n as usize;
-        let m = problem_size.m as usize;
+        let n = usize::try_from(problem_size.n)?;
+        let m = usize::try_from(problem_size.m)?;
+        usize::try_from(problem_size.nnz_jac)?;
+        usize::try_from(problem_size.nnz_hess)?;
 
         let mut x_l = vec![0.0; n];
         let mut x_u = vec![0.0; n];
@@ -268,8 +357,7 @@ impl Application {
             )
         };
 
-        // Add the options to the C problem. Perhaps there is a way to do this without copying
-        // the strings as CString instances.
+        // Add the options to the C problem. Todo - see if we can avoid copying the strings.
         for (option, value) in &self.int_options {
             let name = CString::new(option.as_bytes())?;
             unsafe {

@@ -3,6 +3,8 @@
 //! This example shows how it is possible to directly use the C API bindings. It is recommended to
 //! ise the `Tnlp` trait and `Application` struct for a more idiomatic Rust interface.
 
+#[allow(clippy::wildcard_imports)]
+
 use ipopt_bindgen::c_interface::*;
 
 extern "C" fn objective_callback(
@@ -12,10 +14,28 @@ extern "C" fn objective_callback(
     obj_value: *mut ipnumber,
     _user_data: UserDataPtr,
 ) -> bool {
-    let x_slice = unsafe { std::slice::from_raw_parts(x, n as usize) };
+    let n_var = usize::try_from(n).unwrap();
+    let x_slice = unsafe { std::slice::from_raw_parts(x, n_var) };
     unsafe {
         *obj_value = x_slice[0] * x_slice[3] * (x_slice[0] + x_slice[1] + x_slice[2]) + x_slice[2];
     }
+    true
+}
+
+extern "C" fn gradient_callback(
+    n: ipindex,
+    x: *mut ipnumber,
+    _new_x: bool,
+    grad_f: *mut ipnumber,
+    _user_data: UserDataPtr,
+) -> bool {
+    let n_var = usize::try_from(n).unwrap();
+    let x_slice = unsafe { std::slice::from_raw_parts(x, n_var) };
+    let grad_slice = unsafe { std::slice::from_raw_parts_mut(grad_f, n_var) };
+    grad_slice[0] = x_slice[0] * x_slice[3] + x_slice[3] * (x_slice[0] + x_slice[1] + x_slice[2]);
+    grad_slice[1] = x_slice[0] * x_slice[3];
+    grad_slice[2] = x_slice[0] * x_slice[3] + 1.0;
+    grad_slice[3] = x_slice[0] * (x_slice[0] + x_slice[1] + x_slice[2]);
     true
 }
 
@@ -27,29 +47,15 @@ extern "C" fn constraints_callback(
     g: *mut ipnumber,
     _user_data: UserDataPtr,
 ) -> bool {
-    let x_slice = unsafe { std::slice::from_raw_parts(x, n as usize) };
-    let g_slice = unsafe { std::slice::from_raw_parts_mut(g, m as usize) };
+    let n_var = usize::try_from(n).unwrap();
+    let n_cons = usize::try_from(m).unwrap();
+    let x_slice = unsafe { std::slice::from_raw_parts(x, n_var) };
+    let g_slice = unsafe { std::slice::from_raw_parts_mut(g, n_cons) };
     g_slice[0] = x_slice[0] * x_slice[1] * x_slice[2] * x_slice[3];
     g_slice[1] = x_slice[0] * x_slice[0]
         + x_slice[1] * x_slice[1]
         + x_slice[2] * x_slice[2]
         + x_slice[3] * x_slice[3];
-    true
-}
-
-extern "C" fn gradient_callback(
-    n: ipindex,
-    x: *mut ipnumber,
-    _new_x: bool,
-    grad_f: *mut ipnumber,
-    _user_data: UserDataPtr,
-) -> bool {
-    let x_slice = unsafe { std::slice::from_raw_parts(x, n as usize) };
-    let grad_slice = unsafe { std::slice::from_raw_parts_mut(grad_f, n as usize) };
-    grad_slice[0] = x_slice[0] * x_slice[3] + x_slice[3] * (x_slice[0] + x_slice[1] + x_slice[2]);
-    grad_slice[1] = x_slice[0] * x_slice[3];
-    grad_slice[2] = x_slice[0] * x_slice[3] + 1.0;
-    grad_slice[3] = x_slice[0] * (x_slice[0] + x_slice[1] + x_slice[2]);
     true
 }
 
@@ -64,10 +70,11 @@ extern "C" fn jacobian_callback(
     values: *mut ipnumber,
     _user_data: UserDataPtr,
 ) -> bool {
+    let nnz = usize::try_from(nele_jac).unwrap();
     if x.is_null() {
         // Set Jacobian sparsity structure
-        let i_row = unsafe { std::slice::from_raw_parts_mut(i_row, nele_jac as usize) };
-        let j_col = unsafe { std::slice::from_raw_parts_mut(j_col, nele_jac as usize) };
+        let i_row = unsafe { std::slice::from_raw_parts_mut(i_row, nnz) };
+        let j_col = unsafe { std::slice::from_raw_parts_mut(j_col, nnz) };
         // this particular Jacobian is dense
         i_row[0] = 0;
         j_col[0] = 0;
@@ -87,8 +94,9 @@ extern "C" fn jacobian_callback(
         j_col[7] = 3;
     } else {
         // Set Jacobian values
-        let x_slice = unsafe { std::slice::from_raw_parts(x, n as usize) };
-        let values = unsafe { std::slice::from_raw_parts_mut(values, nele_jac as usize) };
+        let n_var = usize::try_from(n).unwrap();
+        let x_slice = unsafe { std::slice::from_raw_parts(x, n_var) };
+        let values = unsafe { std::slice::from_raw_parts_mut(values, nnz) };
         values[0] = x_slice[1] * x_slice[2] * x_slice[3]; // 0,0
         values[1] = x_slice[0] * x_slice[2] * x_slice[3]; // 0,1
         values[2] = x_slice[0] * x_slice[1] * x_slice[3]; // 0,2
@@ -116,23 +124,27 @@ extern "C" fn hessian_callback(
     values: *mut ipnumber,
     _user_data: UserDataPtr,
 ) -> bool {
+    let nnz = usize::try_from(nele_hess).unwrap();
     if x.is_null() {
         // Set the Hessian sparsity structure
-        let i_row_slice = unsafe { std::slice::from_raw_parts_mut(i_row, nele_hess as usize) };
-        let j_col_slice = unsafe { std::slice::from_raw_parts_mut(j_col, nele_hess as usize) };
+        let i_row_slice = unsafe { std::slice::from_raw_parts_mut(i_row, nnz) };
+        let j_col_slice = unsafe { std::slice::from_raw_parts_mut(j_col, nnz) };
         let mut idx: ipindex = 0;
         for row in 0..n {
             for col in 0..=row {
-                i_row_slice[idx as usize] = row;
-                j_col_slice[idx as usize] = col;
+                let index = usize::try_from(idx).unwrap();
+                i_row_slice[index] = row;
+                j_col_slice[index] = col;
                 idx += 1;
             }
         }
     } else {
         // Set the Hessian values
-        let x_slice = unsafe { std::slice::from_raw_parts(x, n as usize) };
-        let lambda_slice = unsafe { std::slice::from_raw_parts(lambda, m as usize) };
-        let hessian = unsafe { std::slice::from_raw_parts_mut(values, nele_hess as usize) };
+        let n_vars = usize::try_from(n).unwrap();
+        let n_cons = usize::try_from(m).unwrap();
+        let x_slice = unsafe { std::slice::from_raw_parts(x, n_vars) };
+        let lambda_slice = unsafe { std::slice::from_raw_parts(lambda, n_cons) };
+        let hessian = unsafe { std::slice::from_raw_parts_mut(values, nnz) };
 
         // return the values. This is a symmetric matrix, fill the lower left
         // triangle only
@@ -170,6 +182,7 @@ extern "C" fn hessian_callback(
 }
 
 fn main() {
+    const C_STYLE_INDEXING: i32 = 0;
     let n = 4;
     let m = 2;
     let mut x_l = vec![1.0, 1.0, 1.0, 1.0];
@@ -178,7 +191,6 @@ fn main() {
     let mut g_u = vec![2.0e19, 40.0];
     let nnz_jacobian = 8;
     let nnz_hessian = 10;
-    const C_STYLE_INDEXING: i32 = 0;
 
     let objective: Eval_F_CB = Some(objective_callback);
     let constraints: Eval_G_CB = Some(constraints_callback);

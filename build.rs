@@ -44,6 +44,9 @@ fn try_add_msvc_include_directory(builder: bindgen::Builder) -> bindgen::Builder
 }
 
 fn main() -> Result<(), Box<dyn Error>> {
+    const IPOPT_BINDGEN_HEADER: &str = "IpoptBindgen.h";
+    const DEFAULT_IPOPT_INCLUDE_PREFIX: &str = "coin-or/";
+
     // Skip building the bindings if we are on docs.rs, otherwise we will get build failures.
     if std::env::var("DOCS_RS").is_ok() {
         return Ok(());
@@ -57,15 +60,13 @@ fn main() -> Result<(), Box<dyn Error>> {
     // IPOPT_BINDGEN_INCLUDE_PREFIX environment variable can be set to override the prefix from
     // which to include. The default value of "coin-or/" is chosen due
     // to being the default install prefix for Ipopt source builds.
-    const IPOPT_BINDGEN_HEADER: &str = "IpoptBindgen.h";
-    const DEFAULT_IPOPT_INCLUDE_PREFIX: &str = "coin-or/";
     let mut include_prefix = std::env::var("IPOPT_BINDGEN_INCLUDE_PREFIX")
         .unwrap_or(DEFAULT_IPOPT_INCLUDE_PREFIX.into());
     if !include_prefix.ends_with('/') {
         include_prefix.push('/');
     }
-    let include_statement = format!("#include <{}IpStdCInterface.h>", include_prefix);
-    let generated_header_path = format!("{}/{}", out_dir, IPOPT_BINDGEN_HEADER);
+    let include_statement = format!("#include <{include_prefix}IpStdCInterface.h>");
+    let generated_header_path = format!("{out_dir}/{IPOPT_BINDGEN_HEADER}");
     let mut file = File::create(&generated_header_path)?;
     file.write_all(include_statement.as_bytes())?;
 

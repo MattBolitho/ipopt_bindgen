@@ -11,9 +11,9 @@
 
 #[cfg(feature = "rust-interface")]
 pub mod application;
+pub mod c_interface;
 #[cfg(feature = "rust-interface")]
 pub mod results;
-pub mod c_interface;
 #[cfg(feature = "rust-interface")]
 pub mod tnlp;
 

@@ -1,4 +1,4 @@
-use ipopt_bindgen::*;
+use ipopt_bindgen::{Application, InitialSolution, ProblemSize, Tnlp};
 
 struct HS071;
 
@@ -10,22 +10,16 @@ const NNZ_HESS: usize = 10;
 impl Tnlp for HS071 {
     fn get_nlp_info(&self) -> ProblemSize {
         ProblemSize {
-            n: N as i32,
-            m: M as i32,
-            nnz_jac: NNZ_JAC as i32,
-            nnz_hess: NNZ_HESS as i32,
+            n: i32::try_from(N).unwrap(),
+            m: i32::try_from(M).unwrap(),
+            nnz_jac: i32::try_from(NNZ_JAC).unwrap(),
+            nnz_hess: i32::try_from(NNZ_HESS).unwrap(),
         }
     }
 
     fn get_bounds_info(&self, x_l: &mut [f64], x_u: &mut [f64], g_l: &mut [f64], g_u: &mut [f64]) {
-        assert!(x_l.len() == N);
-        assert!(x_u.len() == N);
-        assert!(g_l.len() == M);
-        assert!(g_u.len() == M);
-
         x_l.fill(1.0);
         x_u.fill(5.0);
-
         g_l[0] = 25.0;
         g_u[0] = 2e19;
         g_l[1] = 40.0;
@@ -37,41 +31,25 @@ impl Tnlp for HS071 {
     }
 
     fn eval_f(&mut self, x: &[f64], obj_value: &mut f64) -> bool {
-        assert!(x.len() == N);
-
         *obj_value = x[0] * x[3] * (x[0] + x[1] + x[2]) + x[2];
-
         true
     }
 
     fn eval_grad_f(&mut self, x: &[f64], grad_f: &mut [f64]) -> bool {
-        assert!(x.len() == N);
-        assert!(grad_f.len() == N);
-
         grad_f[0] = x[0] * x[3] + x[3] * (x[0] + x[1] + x[2]);
         grad_f[1] = x[0] * x[3];
         grad_f[2] = x[0] * x[3] + 1.0;
         grad_f[3] = x[0] * (x[0] + x[1] + x[2]);
-
         true
     }
 
     fn eval_g(&mut self, x: &[f64], g: &mut [f64]) -> bool {
-        assert!(x.len() == N);
-        assert!(g.len() == M);
-
         g[0] = x[0] * x[1] * x[2] * x[3];
         g[1] = x[0] * x[0] + x[1] * x[1] + x[2] * x[2] + x[3] * x[3];
-
         true
     }
 
-    fn get_jacobian_sparsity(&mut self, n: i32, m: i32, i_row: &mut [i32], j_col: &mut [i32]) {
-        assert!(n == N as i32);
-        assert!(m == M as i32);
-        assert!(i_row.len() == NNZ_JAC);
-        assert!(j_col.len() == NNZ_JAC);
-
+    fn get_jacobian_sparsity(&mut self, _n: i32, _m: i32, i_row: &mut [i32], j_col: &mut [i32]) {
         i_row[0] = 0;
         j_col[0] = 0;
         i_row[1] = 0;
@@ -90,30 +68,19 @@ impl Tnlp for HS071 {
         j_col[7] = 3;
     }
 
-    fn eval_jac_g(&mut self, x: &[f64], m: i32, values: &mut [f64]) -> bool {
-        assert!(x.len() == N);
-        assert!(m == M as i32);
-        assert!(values.len() == NNZ_JAC);
-
+    fn eval_jac_g(&mut self, x: &[f64], _m: i32, values: &mut [f64]) -> bool {
         values[0] = x[1] * x[2] * x[3];
         values[1] = x[0] * x[2] * x[3];
         values[2] = x[0] * x[1] * x[3];
         values[3] = x[0] * x[1] * x[2];
-
         values[4] = 2.0 * x[0];
         values[5] = 2.0 * x[1];
         values[6] = 2.0 * x[2];
         values[7] = 2.0 * x[3];
-
         true
     }
 
-    fn get_hessian_sparsity(&mut self, n: i32, m: i32, i_row: &mut [i32], j_col: &mut [i32]) {
-        assert!(n == N as i32);
-        assert!(m == M as i32);
-        assert!(i_row.len() == NNZ_HESS);
-        assert!(j_col.len() == NNZ_HESS);
-
+    fn get_hessian_sparsity(&mut self, n: i32, _m: i32, i_row: &mut [i32], j_col: &mut [i32]) {
         let mut idx = 0;
         for row in 0..n {
             for col in 0..=row {
@@ -132,10 +99,6 @@ impl Tnlp for HS071 {
         _m: i32,
         values: &mut [f64],
     ) -> bool {
-        assert!(x.len() == N);
-        assert!(lambda.len() == M as usize);
-        assert!(values.len() == NNZ_HESS);
-
         values[0] = obj_factor * (2.0 * x[3]);
 
         values[1] = obj_factor * (x[3]);

@@ -212,6 +212,6 @@ mod tests {
 
         let initial_solution = InitialSolution::from_variables(x.clone());
 
-        assert_eq!(x, initial_solution.x)
+        assert_eq!(x, initial_solution.x);
     }
 }

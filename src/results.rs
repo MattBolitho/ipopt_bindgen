@@ -53,5 +53,5 @@ pub struct OptimizationResult {
     pub performance: PerformanceResults,
 
     /// The raw status return code from Ipopt.
-    pub status: i32
+    pub status: i32,
 }
