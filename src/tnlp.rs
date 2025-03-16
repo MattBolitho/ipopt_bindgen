@@ -45,6 +45,21 @@ pub struct InitialSolution {
     pub lambda: Option<Vec<f64>>,
 }
 
+/// The scaling parameters for a nonlinear problem.
+///
+/// Use `None` for the scaling factors to use the Ipopt default.
+#[derive(Debug, Default, Clone, PartialEq)]
+pub struct UserScaling {
+    /// The objective scaling. Use a negative value to maximize.
+    pub objective: Option<f64>,
+
+    /// The variable scaling factors.
+    pub x: Option<Vec<f64>>,
+
+    /// The constraint scaling factors.
+    pub g: Option<Vec<f64>>,
+}
+
 impl InitialSolution {
     /// Creates a new `InitialSolution` that only contains initial values for the variables.
     ///
@@ -91,24 +106,9 @@ pub trait Tnlp {
 
     /// Gets the problem scaling parameters.
     ///
-    /// This is only called if the `nlp_scaling_method` option is set to "user-scaling".
-    ///
-    /// The default implementation sets all scaling factors to 1.0.
-    ///
-    /// # Parameters
-    ///
-    /// - `obj_scaling` - The objective scaling. Use a negative value to maximize.
-    /// - `x_scaling` - The variable scaling factors.
-    /// - `g_scaling` - The constraint scaling factors.
-    fn get_scaling_parameters(
-        &self,
-        obj_scaling: &mut f64,
-        x_scaling: &mut [f64],
-        g_scaling: &mut [f64],
-    ) {
-        *obj_scaling = 1.0;
-        x_scaling.fill(1.0);
-        g_scaling.fill(1.0);
+    /// The default implementation uses the Ipopt default scaling factors.
+    fn get_scaling(&self) -> UserScaling {
+        UserScaling::default()
     }
 
     /// Gets the initial point for the problem.

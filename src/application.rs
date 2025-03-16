@@ -5,8 +5,8 @@
 
 #[allow(clippy::wildcard_imports)]
 
-use crate::{c_interface::*, results::OptimizationResult, tnlp::Tnlp};
-use std::{collections::HashMap, error::Error, ffi::CString, os::raw::c_void, slice};
+use crate::{c_interface::*, results::OptimizationResult, tnlp::{Tnlp, UserScaling}};
+use std::{collections::HashMap, error::Error, ffi::CString, ptr, os::raw::c_void, slice};
 
 /// The main application type for making calls to Ipopt.
 #[derive(Debug, Default, Clone, PartialEq)]
@@ -338,7 +338,7 @@ impl Application {
         let mut user_data = IpoptBindgenUserData::new(&mut problem, &mut results);
         let user_data_ptr = &raw mut user_data as UserDataPtr;
 
-        let problem = unsafe {
+        let ipopt_problem = unsafe {
             CreateIpoptProblem(
                 problem_size.n,
                 x_l.as_mut_ptr(),
@@ -361,20 +361,32 @@ impl Application {
         for (option, value) in &self.int_options {
             let name = CString::new(option.as_bytes())?;
             unsafe {
-                AddIpoptIntOption(problem, name.into_raw(), *value);
+                AddIpoptIntOption(ipopt_problem, name.into_raw(), *value);
             }
         }
         for (option, value) in &self.string_options {
             let name = CString::new(option.as_bytes())?;
             let string = CString::new(value.as_bytes())?;
             unsafe {
-                AddIpoptStrOption(problem, name.into_raw(), string.into_raw());
+                AddIpoptStrOption(ipopt_problem, name.into_raw(), string.into_raw());
             }
         }
         for (option, value) in &self.numeric_options {
             let option_name = CString::new(option.as_bytes())?;
             unsafe {
-                AddIpoptNumOption(problem, option_name.into_raw(), *value);
+                AddIpoptNumOption(ipopt_problem, option_name.into_raw(), *value);
+            }
+        }
+
+        let scaling = problem.get_scaling();
+        if scaling != UserScaling::default() {
+            unsafe {
+                SetIpoptProblemScaling(
+                    ipopt_problem,
+                    scaling.objective.unwrap_or(1.0),
+                    scaling.x.map_or(ptr::null_mut(), |mut v| v.as_mut_ptr()),
+                    scaling.g.map_or(ptr::null_mut(), |mut v| v.as_mut_ptr()),
+                );
             }
         }
 
@@ -386,7 +398,7 @@ impl Application {
 
         results.status = unsafe {
             IpoptSolve(
-                problem,
+                ipopt_problem,
                 variables.as_mut_ptr(),
                 g.as_mut_ptr(),
                 &raw mut results.solution.objective,
@@ -402,6 +414,10 @@ impl Application {
         results.solution.lambda = lambda;
         results.solution.z_l = z_l;
         results.solution.z_u = z_u;
+
+        unsafe {
+            FreeIpoptProblem(ipopt_problem);
+        }
 
         Ok(results)
     }
