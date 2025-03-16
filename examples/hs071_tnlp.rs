@@ -1,4 +1,5 @@
 use ipopt_bindgen::{Application, InitialSolution, ProblemSize, Tnlp};
+use std::error::Error;
 
 struct HS071;
 
@@ -136,12 +137,18 @@ impl Tnlp for HS071 {
     }
 }
 
-fn main() {
+fn main() -> Result<(), Box<dyn Error>> {
     let mut application = Application::new();
     application
         .set_string_option("linear_solver", "mumps")
         .set_string_option("mu_strategy", "adaptive")
         .set_numeric_option("tol", 3.82e-6);
     let hs071 = HS071;
-    let _results = application.optimize_tnlp(hs071);
+    let results = application.optimize_tnlp(hs071)?;
+
+    println!("Objective value: {}", results.solution.objective);
+    println!("Solution: {:?}", results.solution);
+    println!("Performance statistics: {:?}", results.performance);
+
+    Ok(())
 }

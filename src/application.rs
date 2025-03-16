@@ -431,8 +431,8 @@ impl Application {
         }
 
         let mut variables = initial_solution.x;
-        let z_l = initial_solution.z_l.unwrap_or(vec![1.0; n]);
-        let z_u = initial_solution.z_u.unwrap_or(vec![1.0; n]);
+        let mut z_l = initial_solution.z_l.unwrap_or(vec![1.0; n]);
+        let mut z_u = initial_solution.z_u.unwrap_or(vec![1.0; n]);
         let mut g = vec![0.0; m];
         let mut lambda = initial_solution.lambda.unwrap_or(vec![1.0; m]);
 
@@ -443,8 +443,8 @@ impl Application {
                 g.as_mut_ptr(),
                 &raw mut results.solution.objective,
                 lambda.as_mut_ptr(),
-                x_l.as_mut_ptr(),
-                x_u.as_mut_ptr(),
+                z_l.as_mut_ptr(),
+                z_u.as_mut_ptr(),
                 user_data_ptr,
             )
         };
